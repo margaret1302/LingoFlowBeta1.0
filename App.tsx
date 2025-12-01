@@ -383,10 +383,11 @@ const PrepView: React.FC<PrepViewProps> = ({ session, onUpdateSession, onBack })
          </div>
 
          <div className="flex-1 overflow-hidden relative">
-            {activeTab === 'chat' ? (
-              <ChatPanel />
-            ) : (
-              <div className="flex flex-col h-full bg-yellow-50/30">
+            <div className={`h-full flex flex-col ${activeTab === 'chat' ? 'block' : 'hidden'}`}>
+               <ChatPanel />
+            </div>
+            
+            <div className={`h-full flex flex-col bg-yellow-50/30 ${activeTab === 'notes' ? 'block' : 'hidden'}`}>
                  {/* Notes Toolbar */}
                  <div className="p-3 border-b border-slate-100 flex justify-between items-center bg-white">
                     <button 
@@ -404,8 +405,7 @@ const PrepView: React.FC<PrepViewProps> = ({ session, onUpdateSession, onBack })
                    onChange={(e) => handleNotesChange(e.target.value)}
                    onBlur={handleNotesBlur}
                  />
-              </div>
-            )}
+            </div>
          </div>
       </div>
     </div>
