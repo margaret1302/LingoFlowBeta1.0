@@ -22,21 +22,22 @@ export interface PrepResult {
   terms: Term[];
 }
 
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+  timestamp: number;
+}
+
 export interface Session {
   id: string;
   topic: string;
   summary: string[];
   terms: Term[];
   notes: string; // User's content capture
+  chatHistory: ChatMessage[];
   createdAt: number;
   lastModified: number;
-}
-
-export interface ChatMessage {
-  id: string;
-  role: 'user' | 'model';
-  text: string;
-  timestamp: number;
 }
 
 export interface FlashcardConfig {

@@ -3,13 +3,24 @@ import { ArrowRight } from './Icons';
 import { streamChatMessage } from '../services/geminiService';
 import { ChatMessage } from '../types';
 
-export const ChatPanel: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: '1', role: 'model', text: 'Hi! I\'m your booth partner. I can explain complex concepts and suggest collocations. \n\nTry asking: "What is the difference between AC and DC charging?"', timestamp: Date.now() }
-  ]);
+interface ChatPanelProps {
+  messages: ChatMessage[];
+  onMessagesChange: (messages: ChatMessage[]) => void;
+}
+
+export const ChatPanel: React.FC<ChatPanelProps> = ({ messages, onMessagesChange }) => {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Initialize with welcome message if empty
+  useEffect(() => {
+    if (messages.length === 0) {
+      onMessagesChange([
+        { id: '1', role: 'model', text: 'Hi! I\'m your booth partner. I can explain complex concepts and suggest collocations. \n\nTry asking: "What is the difference between AC and DC charging?"', timestamp: Date.now() }
+      ]);
+    }
+  }, [messages.length, onMessagesChange]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -21,12 +32,13 @@ export const ChatPanel: React.FC = () => {
     if (!input.trim()) return;
     
     const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', text: input, timestamp: Date.now() };
-    setMessages(prev => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    onMessagesChange(updatedMessages);
     setInput('');
     setIsTyping(true);
 
     try {
-      const history = messages.map(m => ({
+      const history = updatedMessages.map(m => ({
         role: m.role,
         parts: [{ text: m.text }]
       }));
@@ -37,15 +49,16 @@ export const ChatPanel: React.FC = () => {
       const botMsgId = (Date.now() + 1).toString();
       
       // Add empty bot message placeholder
-      setMessages(prev => [...prev, { id: botMsgId, role: 'model', text: '', timestamp: Date.now() }]);
+      const messagesWithBot = [...updatedMessages, { id: botMsgId, role: 'model', text: '', timestamp: Date.now() }];
+      onMessagesChange(messagesWithBot);
 
       for await (const chunk of stream) {
         botResponse += chunk;
-        setMessages(prev => prev.map(m => m.id === botMsgId ? { ...m, text: botResponse } : m));
+        onMessagesChange(messagesWithBot.map(m => m.id === botMsgId ? { ...m, text: botResponse } : m));
       }
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'model', text: "Sorry, I lost connection. Please try again.", timestamp: Date.now() }]);
+      onMessagesChange([...updatedMessages, { id: Date.now().toString(), role: 'model', text: "Sorry, I lost connection. Please try again.", timestamp: Date.now() }]);
     } finally {
       setIsTyping(false);
     }

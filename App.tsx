@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Term, PrepResult, Session } from './types';
+import { View, Term, PrepResult, Session, ChatMessage } from './types';
 import { generatePrepMaterial } from './services/geminiService';
 import { ChatPanel } from './components/ChatWidget';
 import { RapidFire } from './components/RapidFire';
@@ -98,6 +98,10 @@ const PrepView: React.FC<PrepViewProps> = ({ session, onUpdateSession, onBack })
     if (notes !== session.notes) {
       onUpdateSession({ ...session, notes, lastModified: Date.now() });
     }
+  };
+
+  const handleMessagesChange = (updatedMessages: ChatMessage[]) => {
+    onUpdateSession({ ...session, chatHistory: updatedMessages, lastModified: Date.now() });
   };
 
   // --- Resizing Logic ---
@@ -384,7 +388,10 @@ const PrepView: React.FC<PrepViewProps> = ({ session, onUpdateSession, onBack })
 
          <div className="flex-1 overflow-hidden relative">
             <div className={`h-full flex flex-col ${activeTab === 'chat' ? 'block' : 'hidden'}`}>
-               <ChatPanel />
+               <ChatPanel 
+                  messages={session.chatHistory || []} 
+                  onMessagesChange={handleMessagesChange}
+               />
             </div>
             
             <div className={`h-full flex flex-col bg-yellow-50/30 ${activeTab === 'notes' ? 'block' : 'hidden'}`}>
@@ -567,6 +574,7 @@ const App = () => {
         summary: result.summary,
         terms: result.terms,
         notes: "",
+        chatHistory: [], // Initialize empty chat history
         createdAt: Date.now(),
         lastModified: Date.now()
       };
